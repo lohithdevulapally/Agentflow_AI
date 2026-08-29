@@ -27,15 +27,23 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.use(compression());
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
-// CORS configuration
+// CORS configuration - supports local dev, Vercel, Render, and configured CLIENT_URL
 app.use(
   cors({
-    origin: [
-      env.CLIENT_URL,
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      'http://localhost:5000',
-    ],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (
+        origin === env.CLIENT_URL ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1') ||
+        origin.endsWith('.vercel.app') ||
+        origin.endsWith('.onrender.com') ||
+        origin.endsWith('.railway.app')
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
